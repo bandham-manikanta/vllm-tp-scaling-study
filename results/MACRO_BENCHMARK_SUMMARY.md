@@ -28,16 +28,6 @@
 
 ### Table 2: Decode-Heavy Workload (`256` in $\times$ `1024` out)
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [Table 1: Prefill-Heavy Workload (`8192` in $\times$ `128` out)](#table-1-prefill-heavy-workload-8192-in-times-128-out)
-- [Table 2: Decode-Heavy Workload (`256` in $\times$ `1024` out)](#table-2-decode-heavy-workload-256-in-times-1024-out)
-
-<!-- /code_chunk_output -->
-
-
 | Concurrency ($C$) | Metric | TP = 1 | TP = 2 | TP = 4 | Speedup / Ratio (TP2 / TP1) | Speedup / Ratio (TP4 / TP1) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **$C = 1$** | **Median TTFT (ms)** | 93.4 | 66.0 | 70.6 | 1.41x | 1.32x |

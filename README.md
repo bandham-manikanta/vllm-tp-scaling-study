@@ -223,6 +223,9 @@ python3 scripts/parse_micro_traces.py
 
 ```
 vllm-tp-scaling-study/
+├── docs/
+│   └── THEORETICAL_ROOFLINE_MODEL.md    # Theoretical A100 ceilings & architectural modeling
+├── env_info/                            # Hardware & software topology diagnostic metadata
 ├── results/
 │   ├── MACRO_BENCHMARK_SUMMARY.md       # Full 18-point serving benchmark table
 │   ├── MICRO_BENCHMARK_SUMMARY.md       # Full 18-point GPU Kernel Compute vs comm table
