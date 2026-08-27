@@ -227,17 +227,16 @@ vllm-tp-scaling-study/
 │   ├── MACRO_BENCHMARK_SUMMARY.md       # Full 18-point serving benchmark table
 │   ├── MICRO_BENCHMARK_SUMMARY.md       # Full 18-point GPU Kernel Compute vs comm table
 │   ├── micro_trace_results.json         # Raw extracted CUPTI hardware metrics
-│   ├── RESULTS_AND_ANALYSIS.md          # Comprehensive technical deep-dive
-│   ├── plots/                           # 7 high-resolution publication charts
+│   ├── plots/                           # High-resolution publication charts
 │   ├── tp1/, tp2/, tp4/                 # Raw macro JSON benchmark logs
 │   └── traces/                          # Raw .nsys-rep traces & SQLite databases
 └── scripts/
-    ├── parse_micro_traces.py            # Automated CUPTI trace parsing engine
     ├── parse_macro_results.py           # Macro JSON benchmark aggregator
-    ├── plot_macro_results.py            # Macro dashboard visualization generator
+    ├── plot_macro_results.py            # Macro dashboard & pareto visualization generator
+    ├── parse_micro_traces.py            # Automated CUPTI trace parsing engine
+    ├── plot_micro_scaling.py            # Micro kernel decomposition visualization generator
     ├── profile_tp_step.py               # Precision NVTX & CUDA Profiler step harness
     ├── run_benchmarks.sh                # Automated macro serving benchmark suite
-    └── run_micro_profiling.sh           # Automated Nsight micro-profiling suite
+    ├── run_micro_profiling.sh           # Automated Nsight micro-profiling suite
+    └── capture_env.sh                   # Environment & topology diagnostic capture tool
 ```
-
-For the complete technical breakdown and full mathematical analysis, see [RESULTS_AND_ANALYSIS.md](./results/RESULTS_AND_ANALYSIS.md).

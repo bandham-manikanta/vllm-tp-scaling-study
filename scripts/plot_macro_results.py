@@ -2,7 +2,7 @@
 """
 Publication-Quality Macro Benchmark Plotting Suite
 Generates all 6 macro scaling figures, including the Pareto Frontier and Master Dashboard
-with explicit TP=2 sweet-spot annotations.
+with explicit TP=2 sweet-spot annotations and mathematically sound MFU calculations.
 """
 
 import glob
@@ -34,12 +34,22 @@ PLOTS_DIR = RESULTS_DIR / "plots"
 PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Hardware Specifications (A100-PCIE-80GB)
-PEAK_TFLOPS = 312.0  # FP16/BF16 Tensor Core Peak per GPU
+MODEL_PARAMS = 27.2e9  # 27.2B params for Qwen3.5-27B
+PEAK_TFLOPS_PER_GPU = 312.0  # FP16/BF16 Tensor Core Peak per GPU (TFLOPs)
 PEAK_HBM_BW_GBS = 2039.0  # GB/s HBM2e per GPU
-RIDGE_POINT = (PEAK_TFLOPS * 1e12) / (PEAK_HBM_BW_GBS * 1e9)  # ~153.0 FLOPs/Byte
+RIDGE_POINT = (PEAK_TFLOPS_PER_GPU * 1e12) / (PEAK_HBM_BW_GBS * 1e9)  # ~153.0 FLOPs/Byte
 
 COLORS = {1: "#2b5c8f", 2: "#2ca02c", 4: "#d95f02"}
 MARKERS = {1: "o", 2: "s", 4: "^"}
+
+
+def compute_mfu(total_tok_per_sec, tp_size):
+    if not total_tok_per_sec or not tp_size:
+        return 0.0
+    flop_per_token = 2.0 * MODEL_PARAMS
+    total_flops = total_tok_per_sec * flop_per_token
+    peak_hardware_flops = tp_size * (PEAK_TFLOPS_PER_GPU * 1e12)
+    return (total_flops / peak_hardware_flops) * 100.0
 
 
 def load_dataset():
@@ -64,7 +74,7 @@ def load_dataset():
             
         tot_tp = d.get("total_token_throughput", 0)
         out_tp = d.get("output_throughput", 0)
-        mfu = d.get("mfu_percentage", 0)
+        mfu = compute_mfu(tot_tp, tp)
         
         data[key][c][tp] = {
             "ttft_med": d.get("median_ttft_ms", 0),
@@ -73,7 +83,7 @@ def load_dataset():
             "total_tp": tot_tp,
             "tokens_per_gpu": tot_tp / tp if tp > 0 else 0,
             "mfu": mfu,
-            "achieved_tflops_gpu": (mfu / 100.0) * PEAK_TFLOPS,
+            "achieved_tflops_gpu": (mfu / 100.0) * PEAK_TFLOPS_PER_GPU,
         }
     return data
 
@@ -82,7 +92,7 @@ def plot_roofline(data, save_path=PLOTS_DIR / "roofline_model.png"):
     fig, ax = plt.subplots(figsize=(8.5, 5.5))
     ai_range = np.logspace(-1, 3.5, 400)
     bw_bound = (PEAK_HBM_BW_GBS * ai_range) / 1e3
-    comp_bound = np.full_like(ai_range, PEAK_TFLOPS)
+    comp_bound = np.full_like(ai_range, PEAK_TFLOPS_PER_GPU)
     roofline = np.minimum(bw_bound, comp_bound)
     
     ax.plot(ai_range, roofline, color="#222222", linewidth=2.5, label="Theoretical A100 Ceiling")
@@ -109,7 +119,7 @@ def plot_roofline(data, save_path=PLOTS_DIR / "roofline_model.png"):
     ax.set_xlabel("Arithmetic Intensity (FLOPs / Byte)")
     ax.set_ylabel("Achieved Performance (TFLOPs/s per GPU)")
     ax.set_title("Empirical Roofline Model: Qwen3.5-27B on A100-80GB", fontweight="bold", pad=12)
-    ax.set_ylim(0.5, 450)
+    ax.set_ylim(0.1, 450)
     ax.legend(loc="lower right", framealpha=0.9, fontsize=8.5)
     
     plt.tight_layout()
@@ -158,41 +168,50 @@ def plot_pareto(data, save_path=PLOTS_DIR / "pareto_frontier.png"):
 
 def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.png"):
     fig = plt.figure(figsize=(18, 11))
-    gs = fig.add_gridspec(2, 3, hspace=0.32, wspace=0.28)
+    gs = fig.add_gridspec(2, 3, hspace=0.35, wspace=0.28)
     
     prefill_key = ("prefill_heavy", 8192, 128)
     decode_key = ("decode_heavy", 256, 1024)
     concurrencies = [1, 8, 32]
     tp_sizes = [1, 2, 4]
     
-    # 1. Roofline
+    # --------------------------------------------------------------------------
+    # 1. Roofline (Top Left)
+    # --------------------------------------------------------------------------
     ax1 = fig.add_subplot(gs[0, 0])
     ai_range = np.logspace(-1, 3.5, 400)
-    roof = np.minimum((PEAK_HBM_BW_GBS * ai_range) / 1e3, PEAK_TFLOPS)
-    ax1.plot(ai_range, roof, color="#333333", linewidth=2.2)
+    roof = np.minimum((PEAK_HBM_BW_GBS * ai_range) / 1e3, PEAK_TFLOPS_PER_GPU)
+    ax1.plot(ai_range, roof, color="#333333", linewidth=2.2, label="Roofline")
     ax1.axvline(RIDGE_POINT, color="#777777", linestyle=":", alpha=0.7)
+    
     for c, ai_val in [(1, 1.0), (32, 32.0)]:
         for tp in [1, 2, 4]:
             pt = data[decode_key].get(c, {}).get(tp)
-            if pt: ax1.scatter(ai_val, pt["achieved_tflops_gpu"], color=COLORS[tp], marker=MARKERS[tp], s=60)
+            if pt: ax1.scatter(ai_val, pt["achieved_tflops_gpu"], color=COLORS[tp], marker=MARKERS[tp], s=65, zorder=5)
+            
     for tp in [1, 2, 4]:
         pt = data[prefill_key].get(32, {}).get(tp)
         if pt:
-            ax1.scatter(360.0, pt["achieved_tflops_gpu"], color=COLORS[tp], marker=MARKERS[tp], s=70)
+            ax1.scatter(360.0, pt["achieved_tflops_gpu"], color=COLORS[tp], marker=MARKERS[tp], s=75, zorder=5)
             if tp == 2:
                 ax1.scatter(360.0, pt["achieved_tflops_gpu"], s=260, facecolors="none", edgecolors="#2ca02c", linewidth=2.0, zorder=10)
+                
     ax1.set_xscale("log")
     ax1.set_yscale("log")
     ax1.set_title("A. Empirical Roofline Model", fontweight="bold")
     ax1.set_xlabel("Arithmetic Intensity (FLOPs/B)")
     ax1.set_ylabel("TFLOPs/s per GPU")
+    ax1.set_ylim(0.1, 450)
 
-    # 2. Pareto Frontier
+    # --------------------------------------------------------------------------
+    # 2. Pareto Frontier (Top Center)
+    # --------------------------------------------------------------------------
     ax2 = fig.add_subplot(gs[0, 1])
     for tp in [1, 2, 4]:
         thpts = [data[decode_key][c][tp]["output_tp"] for c in concurrencies]
         itls = [data[decode_key][c][tp]["itl_med"] for c in concurrencies]
         ax2.plot(thpts, itls, color=COLORS[tp], marker=MARKERS[tp], linewidth=2.0, label=f"TP = {tp}")
+        
     tp2_thpt_c32 = data[decode_key][32][2]["output_tp"]
     tp2_itl_c32 = data[decode_key][32][2]["itl_med"]
     ax2.scatter(tp2_thpt_c32, tp2_itl_c32, s=260, facecolors="none", edgecolors="#2ca02c", linewidth=2.0, zorder=10)
@@ -201,11 +220,14 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     ax2.set_ylabel("Median ITL (ms)")
     ax2.legend(loc="upper left", fontsize=8.5)
 
-    # 3. TTFT Log Scaling
+    # --------------------------------------------------------------------------
+    # 3. TTFT Log Scaling (Top Right)
+    # --------------------------------------------------------------------------
     ax3 = fig.add_subplot(gs[0, 2])
     for tp in [1, 2, 4]:
         ttfts = [data[prefill_key][c][tp]["ttft_med"] for c in concurrencies]
         ax3.plot(concurrencies, ttfts, color=COLORS[tp], marker=MARKERS[tp], linewidth=2.0, label=f"TP = {tp}")
+        
     tp2_ttft_c1 = data[prefill_key][1][2]["ttft_med"]
     ax3.scatter(1, tp2_ttft_c1, s=260, facecolors="none", edgecolors="#2ca02c", linewidth=2.0, zorder=10)
     ax3.set_yscale("log")
@@ -215,11 +237,14 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     ax3.set_xticks(concurrencies)
     ax3.legend(loc="lower right", fontsize=8.5)
 
-    # 4. ITL Decode Scaling
+    # --------------------------------------------------------------------------
+    # 4. ITL Decode Scaling (Bottom Left)
+    # --------------------------------------------------------------------------
     ax4 = fig.add_subplot(gs[1, 0])
     for tp in [1, 2, 4]:
         itls = [data[decode_key][c][tp]["itl_med"] for c in concurrencies]
         ax4.plot(concurrencies, itls, color=COLORS[tp], marker=MARKERS[tp], linewidth=2.0, label=f"TP = {tp}")
+        
     tp2_itl_c8 = data[decode_key][8][2]["itl_med"]
     ax4.scatter(8, tp2_itl_c8, s=260, facecolors="none", edgecolors="#2ca02c", linewidth=2.0, zorder=10)
     ax4.set_title("D. Decode ITL & Interconnect Plateau", fontweight="bold")
@@ -228,40 +253,53 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     ax4.set_xticks(concurrencies)
     ax4.legend(loc="upper left", fontsize=8.5)
 
-    # 5. MFU Utilization Bar
+    # --------------------------------------------------------------------------
+    # 5. MFU Utilization Bar (Bottom Center) - PLOT 5
+    # --------------------------------------------------------------------------
     ax5 = fig.add_subplot(gs[1, 1])
     p_mfu = [data[prefill_key][32][tp]["mfu"] for tp in tp_sizes]
     d_mfu = [data[decode_key][32][tp]["mfu"] for tp in tp_sizes]
     x = np.arange(len(tp_sizes))
     w = 0.35
-    ax5.bar(x - w/2, p_mfu, w, label="Prefill (8k)", color="#2b5c8f")
-    ax5.bar(x + w/2, d_mfu, w, label="Decode (1k)", color="#d95f02")
-    ax5.annotate("Optimal (43.1% MFU)", xy=(1 - w/2, p_mfu[1]), xytext=(1 - w/2 - 0.2, p_mfu[1] + 12),
-                 arrowprops=dict(facecolor="#2ca02c", edgecolor="#2ca02c", arrowstyle="->", lw=1.6),
-                 fontsize=8, fontweight="bold", color="#1b7837")
+    
+    rects1 = ax5.bar(x - w/2, p_mfu, w, label="Prefill-Heavy (8k)", color="#2b5c8f", alpha=0.9)
+    rects2 = ax5.bar(x + w/2, d_mfu, w, label="Decode-Heavy (1k)", color="#d95f02", alpha=0.9)
+    
+    # Add numerical percentage labels on top of bars
+    for rect in rects1:
+        h = rect.get_height()
+        ax5.annotate(f"{h:.1f}%", (rect.get_x() + rect.get_width()/2, h), xytext=(0, 4), textcoords="offset points", ha="center", fontsize=8.5, fontweight="bold", color="#1c3d5a")
+    for rect in rects2:
+        h = rect.get_height()
+        ax5.annotate(f"{h:.1f}%", (rect.get_x() + rect.get_width()/2, h), xytext=(0, 4), textcoords="offset points", ha="center", fontsize=8.5, fontweight="bold", color="#8c3b01")
+
     ax5.set_title("E. Peak Hardware Utilization (C=32)", fontweight="bold")
     ax5.set_xticks(x)
     ax5.set_xticklabels([f"TP={tp}" for tp in tp_sizes])
     ax5.set_ylim(0, 65)
-    ax5.set_ylabel("MFU (%)")
+    ax5.set_ylabel("Model FLOPs Utilization (MFU %)")
     ax5.legend(loc="upper right", fontsize=8.5)
 
-    # 6. Total Throughput Comparison
+    # --------------------------------------------------------------------------
+    # 6. Total Throughput Comparison (Bottom Right) - PLOT 6
+    # --------------------------------------------------------------------------
     ax6 = fig.add_subplot(gs[1, 2])
     x_c = np.arange(len(concurrencies))
     w = 0.25
+    
     for i, tp in enumerate(tp_sizes):
         thpt = [data[prefill_key][c][tp]["total_tp"] for c in concurrencies]
-        ax6.bar(x_c + (i - 1)*w, thpt, w, label=f"TP={tp}", color=COLORS[tp])
-    tp2_thpt_c32_tot = data[prefill_key][32][2]["total_tp"]
-    ax6.annotate("Matches TP=4 @ 2x Eff.", xy=(2, tp2_thpt_c32_tot), xytext=(2 - 0.6, tp2_thpt_c32_tot + 2500),
-                 arrowprops=dict(facecolor="#2ca02c", edgecolor="#2ca02c", arrowstyle="->", lw=1.6),
-                 fontsize=8, fontweight="bold", color="#1b7837")
-    ax6.set_title("F. Prefill Throughput Ceiling", fontweight="bold")
+        rects = ax6.bar(x_c + (i - 1)*w, thpt, w, label=f"TP={tp}", color=COLORS[tp], alpha=0.9)
+        # Add labels on C=32 bars
+        if tp in [2, 4]:
+            h = thpt[2]
+            ax6.annotate(f"{h:,.0f}", (x_c[2] + (i - 1)*w, h), xytext=(0, 4), textcoords="offset points", ha="center", fontsize=8.5, fontweight="bold", color=COLORS[tp])
+
+    ax6.set_title("F. Prefill Throughput Scaling", fontweight="bold")
     ax6.set_xticks(x_c)
     ax6.set_xticklabels([f"C={c}" for c in concurrencies])
-    ax6.set_ylim(0, 18500)
-    ax6.set_ylabel("Total Tokens / Sec")
+    ax6.set_ylim(0, 7500)
+    ax6.set_ylabel("Total Tokens / Second")
     ax6.legend(loc="upper left", fontsize=8.5)
 
     fig.suptitle("vLLM Tensor Parallelism Scaling Study (Qwen3.5-27B on 4x A100-80GB PCIe)", fontsize=16, fontweight="bold", y=0.98)
