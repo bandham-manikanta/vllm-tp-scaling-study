@@ -1,0 +1,386 @@
+{
+  "tp1": {
+    "decode_b1_tp1": {
+      "trace_name": "decode_b1_tp1",
+      "num_devices": 1,
+      "step_wall_clock_ms": 231.661902,
+      "total_gpu_time_ms": 15.393626,
+      "t_comp_ms": 15.393626,
+      "t_comm_ms": 0.0,
+      "comm_pct": 0.0,
+      "comp_pct": 100.0,
+      "categories_ms": {
+        "gemm": 7.809888,
+        "deltanet": 4.767626000000002,
+        "flash_attn": 0.086305,
+        "norm_elem": 2.250957999999999,
+        "nccl": 0.0,
+        "other_compute": 0.47884899999999986
+      },
+      "is_graph": true,
+      "graph_count": 69,
+      "kernel_count": 895
+    },
+    "decode_b32_tp1": {
+      "trace_name": "decode_b32_tp1",
+      "num_devices": 1,
+      "step_wall_clock_ms": 2271.997187,
+      "total_gpu_time_ms": 1948.4782340000002,
+      "t_comp_ms": 1948.4782340000002,
+      "t_comm_ms": 0.0,
+      "comm_pct": 0.0,
+      "comp_pct": 100.0,
+      "categories_ms": {
+        "gemm": 1695.2128020000002,
+        "deltanet": 124.49941000000004,
+        "flash_attn": 1.4506390000000005,
+        "norm_elem": 103.31929599999995,
+        "nccl": 0.0,
+        "other_compute": 23.99608700000001
+      },
+      "is_graph": true,
+      "graph_count": 69,
+      "kernel_count": 2804
+    },
+    "decode_b8_tp1": {
+      "trace_name": "decode_b8_tp1",
+      "num_devices": 1,
+      "step_wall_clock_ms": 723.286506,
+      "total_gpu_time_ms": 438.3697920000002,
+      "t_comp_ms": 438.3697920000002,
+      "t_comm_ms": 0.0,
+      "comm_pct": 0.0,
+      "comp_pct": 100.0,
+      "categories_ms": {
+        "gemm": 372.8192650000001,
+        "deltanet": 34.68244500000005,
+        "flash_attn": 0.473381,
+        "norm_elem": 23.965715000000024,
+        "nccl": 0.0,
+        "other_compute": 6.428985999999994
+      },
+      "is_graph": true,
+      "graph_count": 69,
+      "kernel_count": 2804
+    },
+    "prefill_m2048_tp1": {
+      "trace_name": "prefill_m2048_tp1",
+      "num_devices": 1,
+      "step_wall_clock_ms": 506.80595,
+      "total_gpu_time_ms": 498.3576919999999,
+      "t_comp_ms": 498.3576919999999,
+      "t_comm_ms": 0.0,
+      "comm_pct": 0.0,
+      "comp_pct": 100.0,
+      "categories_ms": {
+        "gemm": 438.8756989999998,
+        "deltanet": 31.795062000000005,
+        "flash_attn": 0.41769900000000004,
+        "norm_elem": 24.270741000000008,
+        "nccl": 0.0,
+        "other_compute": 2.9984910000000013
+      },
+      "is_graph": false,
+      "graph_count": 0,
+      "kernel_count": 1608
+    },
+    "prefill_m512_tp1": {
+      "trace_name": "prefill_m512_tp1",
+      "num_devices": 1,
+      "step_wall_clock_ms": 146.401676,
+      "total_gpu_time_ms": 14.466467999999999,
+      "t_comp_ms": 14.466467999999999,
+      "t_comm_ms": 0.0,
+      "comm_pct": 0.0,
+      "comp_pct": 100.0,
+      "categories_ms": {
+        "gemm": 2.489814,
+        "deltanet": 8.877548999999997,
+        "flash_attn": 0.138881,
+        "norm_elem": 2.3115150000000013,
+        "nccl": 0.0,
+        "other_compute": 0.648709
+      },
+      "is_graph": true,
+      "graph_count": 65,
+      "kernel_count": 791
+    },
+    "prefill_m8192_tp1": {
+      "trace_name": "prefill_m8192_tp1",
+      "num_devices": 1,
+      "step_wall_clock_ms": 2070.87055,
+      "total_gpu_time_ms": 2057.9298850000005,
+      "t_comp_ms": 2057.9298850000005,
+      "t_comm_ms": 0.0,
+      "comm_pct": 0.0,
+      "comp_pct": 100.0,
+      "categories_ms": {
+        "gemm": 1833.9143520000002,
+        "deltanet": 120.84131600000009,
+        "flash_attn": 1.404365,
+        "norm_elem": 90.92540000000002,
+        "nccl": 0.0,
+        "other_compute": 10.844451999999999
+      },
+      "is_graph": false,
+      "graph_count": 0,
+      "kernel_count": 1560
+    }
+  },
+  "tp2": {
+    "decode_b1_tp2": {
+      "trace_name": "decode_b1_tp2",
+      "num_devices": 2,
+      "step_wall_clock_ms": 448.039881,
+      "total_gpu_time_ms": 9.64026050000001,
+      "t_comp_ms": 9.53262850000001,
+      "t_comm_ms": 0.10763199999999999,
+      "comm_pct": 1.116484352264131,
+      "comp_pct": 98.88351564773586,
+      "categories_ms": {
+        "gemm": 4.074547,
+        "deltanet": 3.2455040000000093,
+        "flash_attn": 0.07494400000000001,
+        "norm_elem": 1.6915970000000007,
+        "nccl": 0.10763199999999999,
+        "other_compute": 0.4460364999999998
+      },
+      "is_graph": true,
+      "graph_count": 138,
+      "kernel_count": 1828
+    },
+    "decode_b32_tp2": {
+      "trace_name": "decode_b32_tp2",
+      "num_devices": 2,
+      "step_wall_clock_ms": 1282.460168,
+      "total_gpu_time_ms": 1018.0233335000003,
+      "t_comp_ms": 943.5035545000003,
+      "t_comm_ms": 74.51977900000003,
+      "comm_pct": 7.320046264931708,
+      "comp_pct": 92.6799537350683,
+      "categories_ms": {
+        "gemm": 795.7865845000002,
+        "deltanet": 67.08085900000003,
+        "flash_attn": 1.3682375000000002,
+        "norm_elem": 66.5707795000001,
+        "nccl": 74.51977900000003,
+        "other_compute": 12.697094000000003
+      },
+      "is_graph": true,
+      "graph_count": 268,
+      "kernel_count": 8016
+    },
+    "decode_b8_tp2": {
+      "trace_name": "decode_b8_tp2",
+      "num_devices": 2,
+      "step_wall_clock_ms": 460.67829,
+      "total_gpu_time_ms": 222.8806890000001,
+      "t_comp_ms": 204.2004940000001,
+      "t_comm_ms": 18.680195000000005,
+      "comm_pct": 8.38125325429158,
+      "comp_pct": 91.61874674570842,
+      "categories_ms": {
+        "gemm": 162.02354650000007,
+        "deltanet": 21.306957000000057,
+        "flash_attn": 0.4256375000000001,
+        "norm_elem": 16.489591,
+        "nccl": 18.680195000000005,
+        "other_compute": 3.9547620000000014
+      },
+      "is_graph": true,
+      "graph_count": 268,
+      "kernel_count": 8112
+    },
+    "prefill_m2048_tp2": {
+      "trace_name": "prefill_m2048_tp2",
+      "num_devices": 2,
+      "step_wall_clock_ms": 293.800991,
+      "total_gpu_time_ms": 279.10838550000017,
+      "t_comp_ms": 254.0543370000002,
+      "t_comm_ms": 25.054048499999986,
+      "comm_pct": 8.976458537824895,
+      "comp_pct": 91.02354146217512,
+      "categories_ms": {
+        "gemm": 218.62797250000014,
+        "deltanet": 16.863198000000008,
+        "flash_attn": 0.363348,
+        "norm_elem": 16.66935500000005,
+        "nccl": 25.054048499999986,
+        "other_compute": 1.5304634999999998
+      },
+      "is_graph": false,
+      "graph_count": 0,
+      "kernel_count": 3478
+    },
+    "prefill_m512_tp2": {
+      "trace_name": "prefill_m512_tp2",
+      "num_devices": 2,
+      "step_wall_clock_ms": 54.947037,
+      "total_gpu_time_ms": 3.965854000000001,
+      "t_comp_ms": 3.937886000000001,
+      "t_comm_ms": 0.027968,
+      "comm_pct": 0.7052201114816631,
+      "comp_pct": 99.29477988851833,
+      "categories_ms": {
+        "gemm": 0.9978805,
+        "deltanet": 2.041009000000001,
+        "flash_attn": 0.0509605,
+        "norm_elem": 0.6952035,
+        "nccl": 0.027968,
+        "other_compute": 0.1528325
+      },
+      "is_graph": true,
+      "graph_count": 130,
+      "kernel_count": 646
+    },
+    "prefill_m8192_tp2": {
+      "trace_name": "prefill_m8192_tp2",
+      "num_devices": 2,
+      "step_wall_clock_ms": 1117.631124,
+      "total_gpu_time_ms": 1106.7307335,
+      "t_comp_ms": 1025.775833,
+      "t_comm_ms": 80.95490050000004,
+      "comm_pct": 7.314778387330294,
+      "comp_pct": 92.6852216126697,
+      "categories_ms": {
+        "gemm": 895.6485944999998,
+        "deltanet": 63.569968499999995,
+        "flash_attn": 1.2846015,
+        "norm_elem": 59.91314450000001,
+        "nccl": 80.95490050000004,
+        "other_compute": 5.3595239999999995
+      },
+      "is_graph": false,
+      "graph_count": 0,
+      "kernel_count": 3382
+    }
+  },
+  "tp4": {
+    "decode_b1_tp4": {
+      "trace_name": "decode_b1_tp4",
+      "num_devices": 4,
+      "step_wall_clock_ms": 144.683886,
+      "total_gpu_time_ms": 9.922833499999994,
+      "t_comp_ms": 7.020256499999993,
+      "t_comm_ms": 2.902577000000001,
+      "comm_pct": 29.251493537606997,
+      "comp_pct": 70.748506462393,
+      "categories_ms": {
+        "gemm": 2.2003245,
+        "deltanet": 2.8749759999999944,
+        "flash_attn": 0.061448750000000024,
+        "norm_elem": 1.5949687499999996,
+        "nccl": 2.902577000000001,
+        "other_compute": 0.2885384999999997
+      },
+      "is_graph": true,
+      "graph_count": 276,
+      "kernel_count": 3656
+    },
+    "decode_b32_tp4": {
+      "trace_name": "decode_b32_tp4",
+      "num_devices": 4,
+      "step_wall_clock_ms": 1169.56824,
+      "total_gpu_time_ms": 944.5333822500004,
+      "t_comp_ms": 461.1053382500004,
+      "t_comm_ms": 483.42804400000006,
+      "comm_pct": 51.18167902635818,
+      "comp_pct": 48.81832097364182,
+      "categories_ms": {
+        "gemm": 376.9183330000004,
+        "deltanet": 30.433255250000023,
+        "flash_attn": 0.5396845,
+        "norm_elem": 46.791863500000005,
+        "nccl": 483.42804400000006,
+        "other_compute": 6.422201999999983
+      },
+      "is_graph": true,
+      "graph_count": 280,
+      "kernel_count": 11784
+    },
+    "decode_b8_tp4": {
+      "trace_name": "decode_b8_tp4",
+      "num_devices": 4,
+      "step_wall_clock_ms": 427.074084,
+      "total_gpu_time_ms": 237.30155450000007,
+      "t_comp_ms": 117.27381275000003,
+      "t_comm_ms": 120.02774175000005,
+      "comm_pct": 50.58025936783318,
+      "comp_pct": 49.41974063216683,
+      "categories_ms": {
+        "gemm": 92.45265075000002,
+        "deltanet": 10.31197475,
+        "flash_attn": 0.20715524999999996,
+        "norm_elem": 12.271958750000007,
+        "nccl": 120.02774175000005,
+        "other_compute": 2.0300732500000014
+      },
+      "is_graph": true,
+      "graph_count": 280,
+      "kernel_count": 11976
+    },
+    "prefill_m2048_tp4": {
+      "trace_name": "prefill_m2048_tp4",
+      "num_devices": 4,
+      "step_wall_clock_ms": 327.584638,
+      "total_gpu_time_ms": 319.2205572499995,
+      "t_comp_ms": 132.15084374999964,
+      "t_comm_ms": 187.06971349999986,
+      "comm_pct": 58.60202585684201,
+      "comp_pct": 41.39797414315799,
+      "categories_ms": {
+        "gemm": 109.01325824999967,
+        "deltanet": 9.635897999999997,
+        "flash_attn": 0.16880099999999995,
+        "norm_elem": 12.622824249999969,
+        "nccl": 187.06971349999986,
+        "other_compute": 0.7100622499999987
+      },
+      "is_graph": false,
+      "graph_count": 0,
+      "kernel_count": 6956
+    },
+    "prefill_m512_tp4": {
+      "trace_name": "prefill_m512_tp4",
+      "num_devices": 4,
+      "step_wall_clock_ms": 126.217688,
+      "total_gpu_time_ms": 6.89395974999999,
+      "t_comp_ms": 5.93418349999999,
+      "t_comm_ms": 0.95977625,
+      "comm_pct": 13.921988012767283,
+      "comp_pct": 86.07801198723271,
+      "categories_ms": {
+        "gemm": 0.87809575,
+        "deltanet": 3.4099769999999907,
+        "flash_attn": 0.06744850000000002,
+        "norm_elem": 1.3328682499999986,
+        "nccl": 0.95977625,
+        "other_compute": 0.2457939999999998
+      },
+      "is_graph": true,
+      "graph_count": 260,
+      "kernel_count": 3090
+    },
+    "prefill_m8192_tp4": {
+      "trace_name": "prefill_m8192_tp4",
+      "num_devices": 4,
+      "step_wall_clock_ms": 1005.461375,
+      "total_gpu_time_ms": 996.5794542499998,
+      "t_comp_ms": 490.77980075,
+      "t_comm_ms": 505.7996534999998,
+      "comm_pct": 50.753570259046896,
+      "comp_pct": 49.246429740953104,
+      "categories_ms": {
+        "gemm": 407.6603149999998,
+        "deltanet": 35.764185250000004,
+        "flash_attn": 0.49285274999999995,
+        "norm_elem": 44.177265500000125,
+        "nccl": 505.7996534999998,
+        "other_compute": 2.6851822500000004
+      },
+      "is_graph": false,
+      "graph_count": 0,
+      "kernel_count": 6764
+    }
+  }
+}

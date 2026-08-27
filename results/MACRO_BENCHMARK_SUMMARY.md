@@ -1,37 +1,62 @@
-### Table 1: Prefill-Heavy Scaling (`8192` in $\times$ `128` out)
+### Table 1: Prefill-Heavy Workload (`8192` in $\times$ `128` out)
 
 | Concurrency ($C$) | Metric | TP = 1 | TP = 2 | TP = 4 | Speedup / Ratio (TP2 / TP1) | Speedup / Ratio (TP4 / TP1) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **$C = 1$** | **Median TTFT (ms)** | 2,494.2 | 1,362.1 | 1,356.3 | 1.83x | 1.84x |
 | | **p99 TTFT (ms)** | 4,159.0 | 1,798.2 | 1,370.5 | 2.31x | 3.03x |
+| | **Median ITL / TPOT (ms)** | 37.47 | 21.83 | 15.62 | 1.72x | 2.40x |
+| | **p99 ITL / TPOT (ms)** | 38.42 | 22.00 | 15.66 | 1.75x | 2.45x |
+| | **Output Throughput (tok/s)** | 16.8 | 30.4 | 38.3 | 1.81x | 2.28x |
 | | **Total Throughput (tok/s)** | 1,091.6 | 1,977.6 | 2,490.2 | 1.81x | 2.28x |
 | | **MFU (%)** | 19.0% | 17.2% | 10.9% | 0.91x | 0.57x |
 | **$C = 8$** | **Median TTFT (ms)** | 3,941.5 | 2,548.0 | 2,651.6 | 1.55x | 1.49x |
 | | **p99 TTFT (ms)** | 16,961.1 | 9,548.3 | 10,167.3 | 1.78x | 1.67x |
+| | **Median ITL / TPOT (ms)** | 144.80 | 80.63 | 78.41 | 1.80x | 1.85x |
+| | **p99 ITL / TPOT (ms)** | 155.01 | 87.80 | 86.99 | 1.77x | 1.78x |
+| | **Output Throughput (tok/s)** | 45.7 | 79.8 | 80.8 | 1.75x | 1.77x |
 | | **Total Throughput (tok/s)** | 2,970.0 | 5,188.0 | 5,251.5 | 1.75x | 1.77x |
 | | **MFU (%)** | 51.8% | 45.2% | 22.9% | 0.87x | 0.44x |
 | **$C = 32$** | **Median TTFT (ms)** | 20,372.2 | 2,733.5 | 2,735.1 | 7.45x | 7.45x |
 | | **p99 TTFT (ms)** | 74,404.3 | 40,392.6 | 41,889.3 | 1.84x | 1.78x |
+| | **Median ITL / TPOT (ms)** | 460.99 | 325.93 | 328.14 | 1.41x | 1.40x |
+| | **p99 ITL / TPOT (ms)** | 468.34 | 336.30 | 336.56 | 1.39x | 1.39x |
+| | **Output Throughput (tok/s)** | 51.1 | 91.5 | 90.8 | 1.79x | 1.78x |
 | | **Total Throughput (tok/s)** | 3,319.5 | 5,947.0 | 5,903.5 | 1.79x | 1.78x |
 | | **MFU (%)** | 57.9% | 51.9% | 25.7% | 0.90x | 0.44x |
 
 ---
 
-### Table 2: Decode-Heavy Scaling (`256` in $\times$ `1024` out)
+### Table 2: Decode-Heavy Workload (`256` in $\times$ `1024` out)
+
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+
+<!-- code_chunk_output -->
+
+- [Table 1: Prefill-Heavy Workload (`8192` in $\times$ `128` out)](#table-1-prefill-heavy-workload-8192-in-times-128-out)
+- [Table 2: Decode-Heavy Workload (`256` in $\times$ `1024` out)](#table-2-decode-heavy-workload-256-in-times-1024-out)
+
+<!-- /code_chunk_output -->
+
 
 | Concurrency ($C$) | Metric | TP = 1 | TP = 2 | TP = 4 | Speedup / Ratio (TP2 / TP1) | Speedup / Ratio (TP4 / TP1) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **$C = 1$** | **Median ITL / TPOT (ms)** | 36.86 | 21.44 | 15.76 | 1.72x | 2.34x |
+| **$C = 1$** | **Median TTFT (ms)** | 93.4 | 66.0 | 70.6 | 1.41x | 1.32x |
+| | **p99 TTFT (ms)** | 94.7 | 69.0 | 72.2 | 1.37x | 1.31x |
+| | **Median ITL / TPOT (ms)** | 36.86 | 21.44 | 15.76 | 1.72x | 2.34x |
 | | **p99 ITL / TPOT (ms)** | 36.89 | 21.47 | 15.87 | 1.72x | 2.33x |
 | | **Output Throughput (tok/s)** | 27.1 | 46.5 | 63.2 | 1.72x | 2.33x |
 | | **Total Throughput (tok/s)** | 33.9 | 58.2 | 79.0 | 1.72x | 2.33x |
 | | **MFU (%)** | 0.6% | 0.5% | 0.3% | 0.86x | 0.58x |
-| **$C = 8$** | **Median ITL / TPOT (ms)** | 39.06 | 23.28 | 18.06 | 1.68x | 2.16x |
+| **$C = 8$** | **Median TTFT (ms)** | 582.7 | 351.5 | 362.3 | 1.66x | 1.61x |
+| | **p99 TTFT (ms)** | 588.1 | 363.1 | 402.0 | 1.62x | 1.46x |
+| | **Median ITL / TPOT (ms)** | 39.06 | 23.28 | 18.06 | 1.68x | 2.16x |
 | | **p99 ITL / TPOT (ms)** | 39.31 | 23.54 | 18.33 | 1.67x | 2.14x |
 | | **Output Throughput (tok/s)** | 202.1 | 339.0 | 434.9 | 1.68x | 2.15x |
 | | **Total Throughput (tok/s)** | 252.7 | 423.8 | 543.6 | 1.68x | 2.15x |
 | | **MFU (%)** | 4.4% | 3.7% | 2.4% | 0.84x | 0.54x |
-| **$C = 32$** | **Median ITL / TPOT (ms)** | 48.66 | 28.27 | 27.64 | 1.72x | 1.76x |
+| **$C = 32$** | **Median TTFT (ms)** | 1,369.5 | 859.6 | 896.4 | 1.59x | 1.53x |
+| | **p99 TTFT (ms)** | 2,155.5 | 1,261.2 | 1,357.8 | 1.71x | 1.59x |
+| | **Median ITL / TPOT (ms)** | 48.66 | 28.27 | 27.64 | 1.72x | 1.76x |
 | | **p99 ITL / TPOT (ms)** | 49.63 | 29.00 | 28.43 | 1.71x | 1.75x |
 | | **Output Throughput (tok/s)** | 639.8 | 1,099.8 | 1,121.1 | 1.72x | 1.75x |
 | | **Total Throughput (tok/s)** | 799.7 | 1,374.8 | 1,401.4 | 1.72x | 1.75x |

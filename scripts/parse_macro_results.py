@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Parses vLLM macro benchmark JSON results and outputs two comparison Markdown tables:
-1. Prefill-Heavy (8192 in x 128 out)
-2. Decode-Heavy (256 in x 1024 out)
+Parses vLLM macro benchmark JSON results and outputs comprehensive
+comparison Markdown tables (TTFT, ITL, Throughputs, MFU) for both
+Prefill-Heavy and Decode-Heavy workloads.
 """
 
 import json
@@ -91,121 +91,97 @@ def load_results(base_dir=BASE_RESULTS_DIR):
         
     return data
 
+def render_table_section(title, profile_key, data):
+    lines = []
+    lines.append(f"### {title}\n")
+    lines.append("| Concurrency ($C$) | Metric | TP = 1 | TP = 2 | TP = 4 | Speedup / Ratio (TP2 / TP1) | Speedup / Ratio (TP4 / TP1) |")
+    lines.append("| :--- | :--- | :--- | :--- | :--- | :--- | :--- |")
+    
+    if profile_key not in data:
+        lines.append("| N/A | N/A | N/A | N/A | N/A | N/A | N/A |")
+        return lines
+        
+    p_data = data[profile_key]
+    for c in sorted(p_data.keys()):
+        c_tp = p_data[c]
+        tp1 = c_tp.get(1, {})
+        tp2 = c_tp.get(2, {})
+        tp4 = c_tp.get(4, {})
+        
+        # Median TTFT
+        t1_m = tp1.get("ttft_med", 0.0)
+        t2_m = tp2.get("ttft_med", 0.0)
+        t4_m = tp4.get("ttft_med", 0.0)
+        sp2_ttft = calc_latency_speedup(t1_m, t2_m)
+        sp4_ttft = calc_latency_speedup(t1_m, t4_m)
+        lines.append(f"| **$C = {c}$** | **Median TTFT (ms)** | {t1_m:,.1f} | {t2_m:,.1f} | {t4_m:,.1f} | {sp2_ttft} | {sp4_ttft} |")
+        
+        # p99 TTFT
+        t1_p99 = tp1.get("ttft_p99", 0.0)
+        t2_p99 = tp2.get("ttft_p99", 0.0)
+        t4_p99 = tp4.get("ttft_p99", 0.0)
+        sp2_p99_ttft = calc_latency_speedup(t1_p99, t2_p99)
+        sp4_p99_ttft = calc_latency_speedup(t1_p99, t4_p99)
+        lines.append(f"| | **p99 TTFT (ms)** | {t1_p99:,.1f} | {t2_p99:,.1f} | {t4_p99:,.1f} | {sp2_p99_ttft} | {sp4_p99_ttft} |")
+        
+        # Median ITL / TPOT
+        i1_m = tp1.get("tpot_med", 0.0)
+        i2_m = tp2.get("tpot_med", 0.0)
+        i4_m = tp4.get("tpot_med", 0.0)
+        sp2_itl = calc_latency_speedup(i1_m, i2_m)
+        sp4_itl = calc_latency_speedup(i1_m, i4_m)
+        lines.append(f"| | **Median ITL / TPOT (ms)** | {i1_m:.2f} | {i2_m:.2f} | {i4_m:.2f} | {sp2_itl} | {sp4_itl} |")
+        
+        # p99 ITL / TPOT
+        i1_p99 = tp1.get("tpot_p99", 0.0)
+        i2_p99 = tp2.get("tpot_p99", 0.0)
+        i4_p99 = tp4.get("tpot_p99", 0.0)
+        sp2_p99_itl = calc_latency_speedup(i1_p99, i2_p99)
+        sp4_p99_itl = calc_latency_speedup(i1_p99, i4_p99)
+        lines.append(f"| | **p99 ITL / TPOT (ms)** | {i1_p99:.2f} | {i2_p99:.2f} | {i4_p99:.2f} | {sp2_p99_itl} | {sp4_p99_itl} |")
+        
+        # Output Throughput
+        tp1_o = tp1.get("output_tp", 0.0)
+        tp2_o = tp2.get("output_tp", 0.0)
+        tp4_o = tp4.get("output_tp", 0.0)
+        sp2_o = calc_throughput_speedup(tp1_o, tp2_o)
+        sp4_o = calc_throughput_speedup(tp1_o, tp4_o)
+        lines.append(f"| | **Output Throughput (tok/s)** | {tp1_o:,.1f} | {tp2_o:,.1f} | {tp4_o:,.1f} | {sp2_o} | {sp4_o} |")
+        
+        # Total Throughput
+        tp1_t = tp1.get("total_tp", 0.0)
+        tp2_t = tp2.get("total_tp", 0.0)
+        tp4_t = tp4.get("total_tp", 0.0)
+        sp2_t = calc_throughput_speedup(tp1_t, tp2_t)
+        sp4_t = calc_throughput_speedup(tp1_t, tp4_t)
+        lines.append(f"| | **Total Throughput (tok/s)** | {tp1_t:,.1f} | {tp2_t:,.1f} | {tp4_t:,.1f} | {sp2_t} | {sp4_t} |")
+        
+        # MFU & Parallel Scaling Efficiency
+        m1 = tp1.get("mfu", 0.0)
+        m2 = tp2.get("mfu", 0.0)
+        m4 = tp4.get("mfu", 0.0)
+        sp2_m = calc_mfu_efficiency(m1, m2)
+        sp4_m = calc_mfu_efficiency(m1, m4)
+        lines.append(f"| | **MFU (%)** | {m1:.1f}% | {m2:.1f}% | {m4:.1f}% | {sp2_m} | {sp4_m} |")
+        
+    return lines
+
 def generate_markdown_tables(data, out_path=OUTPUT_MD_PATH):
     lines = []
     
-    # 1. Prefill-Heavy Table
-    prefill_key = ("prefill_heavy", 8192, 128)
-    lines.append("### Table 1: Prefill-Heavy Scaling (`8192` in $\\times$ `128` out)\n")
-    lines.append("| Concurrency ($C$) | Metric | TP = 1 | TP = 2 | TP = 4 | Speedup / Ratio (TP2 / TP1) | Speedup / Ratio (TP4 / TP1) |")
-    lines.append("| :--- | :--- | :--- | :--- | :--- | :--- | :--- |")
-    
-    if prefill_key in data:
-        p_data = data[prefill_key]
-        for c in sorted(p_data.keys()):
-            c_tp = p_data[c]
-            tp1 = c_tp.get(1, {})
-            tp2 = c_tp.get(2, {})
-            tp4 = c_tp.get(4, {})
-            
-            # Median TTFT (Lower is better)
-            t1_m = tp1.get("ttft_med", 0.0)
-            t2_m = tp2.get("ttft_med", 0.0)
-            t4_m = tp4.get("ttft_med", 0.0)
-            sp2 = calc_latency_speedup(t1_m, t2_m)
-            sp4 = calc_latency_speedup(t1_m, t4_m)
-            lines.append(f"| **$C = {c}$** | **Median TTFT (ms)** | {t1_m:,.1f} | {t2_m:,.1f} | {t4_m:,.1f} | {sp2} | {sp4} |")
-            
-            # p99 TTFT (Lower is better)
-            t1_p99 = tp1.get("ttft_p99", 0.0)
-            t2_p99 = tp2.get("ttft_p99", 0.0)
-            t4_p99 = tp4.get("ttft_p99", 0.0)
-            sp2_p99 = calc_latency_speedup(t1_p99, t2_p99)
-            sp4_p99 = calc_latency_speedup(t1_p99, t4_p99)
-            lines.append(f"| | **p99 TTFT (ms)** | {t1_p99:,.1f} | {t2_p99:,.1f} | {t4_p99:,.1f} | {sp2_p99} | {sp4_p99} |")
-            
-            # Total Throughput (Higher is better)
-            tp1_t = tp1.get("total_tp", 0.0)
-            tp2_t = tp2.get("total_tp", 0.0)
-            tp4_t = tp4.get("total_tp", 0.0)
-            sp2_t = calc_throughput_speedup(tp1_t, tp2_t)
-            sp4_t = calc_throughput_speedup(tp1_t, tp4_t)
-            lines.append(f"| | **Total Throughput (tok/s)** | {tp1_t:,.1f} | {tp2_t:,.1f} | {tp4_t:,.1f} | {sp2_t} | {sp4_t} |")
-            
-            # MFU & Parallel Scaling Efficiency
-            m1 = tp1.get("mfu", 0.0)
-            m2 = tp2.get("mfu", 0.0)
-            m4 = tp4.get("mfu", 0.0)
-            sp2_m = calc_mfu_efficiency(m1, m2)
-            sp4_m = calc_mfu_efficiency(m1, m4)
-            lines.append(f"| | **MFU (%)** | {m1:.1f}% | {m2:.1f}% | {m4:.1f}% | {sp2_m} | {sp4_m} |")
-    else:
-        lines.append("| N/A | N/A | N/A | N/A | N/A | N/A | N/A |")
-        
+    # 1. Prefill-Heavy Table (8192 in x 128 out)
+    lines.extend(render_table_section("Table 1: Prefill-Heavy Workload (`8192` in $\\times$ `128` out)", ("prefill_heavy", 8192, 128), data))
     lines.append("\n---\n")
     
-    # 2. Decode-Heavy Table
-    decode_key = ("decode_heavy", 256, 1024)
-    lines.append("### Table 2: Decode-Heavy Scaling (`256` in $\\times$ `1024` out)\n")
-    lines.append("| Concurrency ($C$) | Metric | TP = 1 | TP = 2 | TP = 4 | Speedup / Ratio (TP2 / TP1) | Speedup / Ratio (TP4 / TP1) |")
-    lines.append("| :--- | :--- | :--- | :--- | :--- | :--- | :--- |")
+    # 2. Decode-Heavy Table (256 in x 1024 out)
+    lines.extend(render_table_section("Table 2: Decode-Heavy Workload (`256` in $\\times$ `1024` out)", ("decode_heavy", 256, 1024), data))
     
-    if decode_key in data:
-        d_data = data[decode_key]
-        for c in sorted(d_data.keys()):
-            c_tp = d_data[c]
-            tp1 = c_tp.get(1, {})
-            tp2 = c_tp.get(2, {})
-            tp4 = c_tp.get(4, {})
-            
-            # Median ITL (Lower is better)
-            t1_m = tp1.get("tpot_med", 0.0)
-            t2_m = tp2.get("tpot_med", 0.0)
-            t4_m = tp4.get("tpot_med", 0.0)
-            sp2 = calc_latency_speedup(t1_m, t2_m)
-            sp4 = calc_latency_speedup(t1_m, t4_m)
-            lines.append(f"| **$C = {c}$** | **Median ITL / TPOT (ms)** | {t1_m:.2f} | {t2_m:.2f} | {t4_m:.2f} | {sp2} | {sp4} |")
-            
-            # p99 ITL (Lower is better)
-            t1_p99 = tp1.get("tpot_p99", 0.0)
-            t2_p99 = tp2.get("tpot_p99", 0.0)
-            t4_p99 = tp4.get("tpot_p99", 0.0)
-            sp2_p99 = calc_latency_speedup(t1_p99, t2_p99)
-            sp4_p99 = calc_latency_speedup(t1_p99, t4_p99)
-            lines.append(f"| | **p99 ITL / TPOT (ms)** | {t1_p99:.2f} | {t2_p99:.2f} | {t4_p99:.2f} | {sp2_p99} | {sp4_p99} |")
-            
-            # Output Throughput (Higher is better)
-            tp1_o = tp1.get("output_tp", 0.0)
-            tp2_o = tp2.get("output_tp", 0.0)
-            tp4_o = tp4.get("output_tp", 0.0)
-            sp2_o = calc_throughput_speedup(tp1_o, tp2_o)
-            sp4_o = calc_throughput_speedup(tp1_o, tp4_o)
-            lines.append(f"| | **Output Throughput (tok/s)** | {tp1_o:,.1f} | {tp2_o:,.1f} | {tp4_o:,.1f} | {sp2_o} | {sp4_o} |")
-            
-            # Total Throughput (Higher is better)
-            tp1_t = tp1.get("total_tp", 0.0)
-            tp2_t = tp2.get("total_tp", 0.0)
-            tp4_t = tp4.get("total_tp", 0.0)
-            sp2_t = calc_throughput_speedup(tp1_t, tp2_t)
-            sp4_t = calc_throughput_speedup(tp1_t, tp4_t)
-            lines.append(f"| | **Total Throughput (tok/s)** | {tp1_t:,.1f} | {tp2_t:,.1f} | {tp4_t:,.1f} | {sp2_t} | {sp4_t} |")
-            
-            # MFU & Parallel Scaling Efficiency
-            m1 = tp1.get("mfu", 0.0)
-            m2 = tp2.get("mfu", 0.0)
-            m4 = tp4.get("mfu", 0.0)
-            sp2_m = calc_mfu_efficiency(m1, m2)
-            sp4_m = calc_mfu_efficiency(m1, m4)
-            lines.append(f"| | **MFU (%)** | {m1:.1f}% | {m2:.1f}% | {m4:.1f}% | {sp2_m} | {sp4_m} |")
-    else:
-        lines.append("| N/A | N/A | N/A | N/A | N/A | N/A | N/A |")
-        
     content = "\n".join(lines) + "\n"
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(content)
         
-    print(f"[✓] Summary written to {out_path}")
+    print(f"[✓] Complete comparison summary written to {out_path}")
 
 if __name__ == "__main__":
     results = load_results(BASE_RESULTS_DIR)
