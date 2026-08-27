@@ -78,34 +78,33 @@ I benchmarked vLLM with `vllm bench serve` across Prefill-heavy (`8192 in / 128 
 ![Macro Scaling Dashboard](results/plots/macro_scaling_dashboard.png)
 > *Figure Note: Green circles (Plots A–D) and green arrows (Plots E–F) highlight the optimal operating points for the TP=2 configuration across all benchmarks.*
 
-### Summary Serving Metrics Table
+### Summary Serving Performance Tables
 
-| Workload & Concurrency | Configuration | Mean TTFT (ms) | Median TTFT (ms) | Mean ITL (ms) | Median ITL (ms) | Output Tok/s | Total Tok/s | Empirical Verdict & Scaling Multipliers |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Prefill-Heavy (`8192 in / 128 out`) — Concurrency C = 1** | | | | | | | | |
-| | TP=1 | 2,840.91 | 2,494.25 | 37.64 | 37.52 | 16.79 | 1,091.62 | Baseline single-GPU execution |
-| | **TP=2 (NVLink)\*** | **1,433.52** | **1,362.07** | **21.84** | **21.85** | **30.42** | **1,977.55** | **1.98× Mean / 1.83× Med TTFT speedup; 1.81× Output tok/s (Linear scaling regime)** |
-| | TP=4 (PCIe) | 1,356.57 | 1,356.34 | 15.62 | 15.67 | 38.31 | 2,490.21 | Sub-linear scaling (1.06× Mean / 1.00× Med TTFT vs TP2; 1.26× tok/s with 2× GPUs) |
-| **Prefill-Heavy (`8192 in / 128 out`) — Concurrency C = 8** | | | | | | | | |
-| | TP=1 | 4,770.01 | 3,941.47 | 138.19 | 41.54 | 45.69 | 2,969.99 | Baseline single-GPU execution |
-| | **TP=2 (NVLink)\*** | **2,932.05** | **2,548.04** | **77.51** | **24.66** | **79.82** | **5,188.02** | **1.63× Mean / 1.55× Med TTFT speedup; 1.75× throughput gain over TP=1** |
-| | TP=4 (PCIe) | 3,173.83 | 2,651.61 | 74.49 | 18.66 | 80.79 | 5,251.55 | Stalls on PCIe (negative TTFT scaling vs TP2; matches TP2 throughput with 2× GPUs) |
-| **Prefill-Heavy (`8192 in / 128 out`) — Concurrency C = 32** | | | | | | | | |
-| | TP=1 | 26,752.57 | 20,372.18 | 406.59 | 586.91 | 51.07 | 3,319.48 | Saturated single-GPU queue (queueing delay explosion) |
-| | **TP=2 (NVLink)\*** | **8,829.93** | **2,733.53** | **278.70** | **338.66** | **91.49** | **5,947.02** | **Optimal Saturation: 3.03× Mean / 7.45× Med TTFT speedup; 1.79× throughput gain** |
-| | TP=4 (PCIe) | 9,179.00 | 2,735.12 | 279.35 | 340.73 | 90.82 | 5,903.46 | Inefficient (0% throughput gain over TP2; negative scaling from PCIe contention) |
-| **Decode-Heavy (`256 in / 1024 out`) — Concurrency C = 1** | | | | | | | | |
-| | TP=1 | 92.92 | 93.40 | 36.87 | 36.87 | 27.08 | 33.86 | Memory-bandwidth bound single GPU baseline |
-| | **TP=2 (NVLink)\*** | **66.11** | **66.04** | **21.44** | **21.44** | **46.55** | **58.19** | **1.72× generation speedup (1.72× ITL reduction; 1.41× TTFT speedup)** |
-| | TP=4 (PCIe) | 70.41 | 70.63 | 15.77 | 15.77 | 63.21 | 79.02 | 1.36× tok/s over TP2, but negative TTFT scaling vs TP2 due to PCIe setup latency |
-| **Decode-Heavy (`256 in / 1024 out`) — Concurrency C = 8** | | | | | | | | |
-| | TP=1 | 549.97 | 582.69 | 39.08 | 39.05 | 202.12 | 252.66 | Baseline single-GPU execution |
-| | **TP=2 (NVLink)\*** | **321.03** | **351.50** | **23.30** | **23.28** | **339.05** | **423.81** | **1.68× generation throughput gain over TP=1 (1.68× ITL speedup)** |
-| | TP=4 (PCIe) | 334.36 | 362.34 | 18.08 | 18.05 | 434.92 | 543.65 | 1.28× throughput gain over TP2 (slower TTFT than TP2 due to cross-socket AllReduce) |
-| **Decode-Heavy (`256 in / 1024 out`) — Concurrency C = 32** | | | | | | | | |
-| | TP=1 | 1,377.76 | 1,369.45 | 48.69 | 47.97 | 639.79 | 799.74 | Baseline single-GPU execution |
-| | **TP=2 (NVLink)\*** | **734.55** | **859.57** | **28.39** | **27.92** | **1,099.83** | **1,374.79** | **1.72× generation throughput gain (1.88× Mean TTFT speedup; 2× hardware efficiency)** |
-| | TP=4 (PCIe) | 790.43 | 896.35 | 27.78 | 27.26 | 1,121.14 | 1,401.42 | Inefficient scaling (+1.9% throughput over TP2 with 2× GPUs; negative TTFT scaling) |
+#### 1. Prefill-Heavy Workload (`8192 in / 128 out`)
+| Concurrency | Configuration | Median TTFT (ms) | Total Tok/s | Scaling & Performance Verdict |
+| :---: | :--- | :---: | :---: | :--- |
+| **C = 1** | TP=1 (Baseline) | 2,494.3 ms | 1,092 | Single-GPU baseline |
+| | **TP=2 (NVLink)\*** | **1,362.1 ms** | **1,978** | **1.83× TTFT speedup (Linear scaling regime)** |
+| | TP=4 (PCIe) | 1,356.3 ms | 2,490 | 1.00× vs TP=2 (Stalls on PCIe) |
+| **C = 8** | TP=1 (Baseline) | 3,941.5 ms | 2,970 | Single-GPU baseline |
+| | **TP=2 (NVLink)\*** | **2,548.0 ms** | **5,188** | **1.75× throughput gain over TP=1** |
+| | TP=4 (PCIe) | 2,651.6 ms | 5,252 | Slower TTFT than TP=2 |
+| **C = 32** | TP=1 (Baseline) | 20,372.2 ms | 3,319 | Saturated queue delay |
+| | **TP=2 (NVLink)\*** | **2,733.5 ms** | **5,947** | **7.45× TTFT speedup (Peak saturation)** |
+| | TP=4 (PCIe) | 2,735.1 ms | 5,903 | 0% throughput gain over TP=2 |
+
+#### 2. Decode-Heavy Workload (`256 in / 1024 out`)
+| Concurrency | Configuration | Median ITL (ms) | Output Tok/s | Scaling & Performance Verdict |
+| :---: | :--- | :---: | :---: | :--- |
+| **C = 1** | TP=1 (Baseline) | 36.9 ms | 27.1 | Memory-bandwidth bound single GPU |
+| | **TP=2 (NVLink)\*** | **21.4 ms** | **46.5** | **1.72× generation speedup** |
+| | TP=4 (PCIe) | 15.8 ms | 63.2 | Higher tok/s, but slower TTFT than TP=2 |
+| **C = 8** | TP=1 (Baseline) | 39.1 ms | 202.1 | Single-GPU baseline |
+| | **TP=2 (NVLink)\*** | **23.3 ms** | **339.0** | **1.68× throughput gain over TP=1** |
+| | TP=4 (PCIe) | 18.0 ms | 434.9 | PCIe AllReduce latency penalty |
+| **C = 32** | TP=1 (Baseline) | 48.0 ms | 639.8 | Baseline single-GPU |
+| | **TP=2 (NVLink)\*** | **27.9 ms** | **1,099.8** | **1.72× throughput gain (2× HW efficiency)** |
+| | TP=4 (PCIe) | 27.3 ms | 1,121.1 | Inefficient (+1.9% throughput with 2× GPUs) |
 
 *\* Denotes optimal latency/cost operating point.*
 
