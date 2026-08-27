@@ -75,7 +75,7 @@ The benchmarking cluster consists of a dual-socket AMD EPYC server with asymmetr
 
 I benchmarked vLLM with `vllm bench serve` across Prefill-heavy (`8192 in / 128 out`) and Decode-heavy (`256 in / 1024 out`) workloads across Concurrency levels C in {1, 8, 32}.
 
-![Macro Scaling Dashboard](macro_scaling_dashboard.png)
+![Macro Scaling Dashboard](results/plots/macro_scaling_dashboard.png)
 > *Figure Note: Green circles (Plots A–D) and green arrows (Plots E–F) highlight the optimal operating points for the TP=2 configuration across all benchmarks.*
 
 ### Summary Serving Metrics Table
@@ -117,7 +117,7 @@ I benchmarked vLLM with `vllm bench serve` across Prefill-heavy (`8192 in / 128 
    - Moving from TP=1 -> TP=2 increases generation throughput by **1.68x** (C=8: 202.12 -> 339.05 tok/s) to **1.72x** (C=32: 639.79 -> 1,099.83 tok/s).
    - Moving from TP=2 -> TP=4 yields minimal throughput gain at C=32 (+1.9%, 1,099.83 -> 1,121.14 tok/s) and suffers negative TTFT scaling due to PCIe cross-socket communication overhead.
 
-![Throughput vs Latency Pareto Frontier](pareto_frontier.png)
+![Throughput vs Latency Pareto Frontier](results/plots/pareto_frontier.png)
 
 ---
 
@@ -125,7 +125,7 @@ I benchmarked vLLM with `vllm bench serve` across Prefill-heavy (`8192 in / 128 
 
 Using Nsight Systems and CUPTI activity traces across all 18 runs, I parsed the exact duration of each kernel category on hardware to isolate compute math from communication overhead.
 
-![Micro Scaling Decomposition](micro_scaling_decomposition.png)
+![Micro Scaling Decomposition](results/plots/micro_scaling_decomposition.png)
 
 ### Micro-Benchmark Hardware Measurement Table
 
