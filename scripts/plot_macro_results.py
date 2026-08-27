@@ -2,7 +2,7 @@
 """
 Publication-Quality Macro Benchmark Plotting Suite
 Generates all 6 macro scaling figures, including the Pareto Frontier and Master Dashboard
-with explicit TP=2 sweet-spot annotations and mathematically sound MFU calculations.
+with explicit TP=2 sweet-spot annotations and green arrows on Subplots E & F (zero overlap).
 """
 
 import glob
@@ -254,7 +254,7 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     ax4.legend(loc="upper left", fontsize=8.5)
 
     # --------------------------------------------------------------------------
-    # 5. MFU Utilization Bar (Bottom Center) - PLOT 5
+    # 5. MFU Utilization Bar (Bottom Center) - PLOT 5 (With Clean Arrow)
     # --------------------------------------------------------------------------
     ax5 = fig.add_subplot(gs[1, 1])
     p_mfu = [data[prefill_key][32][tp]["mfu"] for tp in tp_sizes]
@@ -262,8 +262,8 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     x = np.arange(len(tp_sizes))
     w = 0.35
     
-    rects1 = ax5.bar(x - w/2, p_mfu, w, label="Prefill-Heavy (8k)", color="#2b5c8f", alpha=0.9)
-    rects2 = ax5.bar(x + w/2, d_mfu, w, label="Decode-Heavy (1k)", color="#d95f02", alpha=0.9)
+    rects1 = ax5.bar(x - w/2, p_mfu, w, label="Prefill (8k)", color="#2b5c8f", alpha=0.9)
+    rects2 = ax5.bar(x + w/2, d_mfu, w, label="Decode (1k)", color="#d95f02", alpha=0.9)
     
     # Add numerical percentage labels on top of bars
     for rect in rects1:
@@ -273,15 +273,24 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
         h = rect.get_height()
         ax5.annotate(f"{h:.1f}%", (rect.get_x() + rect.get_width()/2, h), xytext=(0, 4), textcoords="offset points", ha="center", fontsize=8.5, fontweight="bold", color="#8c3b01")
 
+    # Arrow pointing to TP=2 Prefill bar positioned neatly to the right
+    tp2_p_mfu = p_mfu[1]  # 51.8%
+    ax5.annotate("Optimal: 51.8% MFU\n(2× Efficiency)",
+                 xy=(1 - w/2, tp2_p_mfu + 2),
+                 xytext=(1.35, tp2_p_mfu + 12),
+                 arrowprops=dict(facecolor="#2ca02c", edgecolor="#2ca02c", arrowstyle="->", lw=1.8),
+                 fontsize=8.5, fontweight="bold", color="#1b7837",
+                 bbox=dict(boxstyle="round,pad=0.25", facecolor="#e5f5e0", edgecolor="#2ca02c", alpha=0.9))
+
     ax5.set_title("E. Peak Hardware Utilization (C=32)", fontweight="bold")
     ax5.set_xticks(x)
     ax5.set_xticklabels([f"TP={tp}" for tp in tp_sizes])
-    ax5.set_ylim(0, 65)
+    ax5.set_ylim(0, 75)
     ax5.set_ylabel("Model FLOPs Utilization (MFU %)")
-    ax5.legend(loc="upper right", fontsize=8.5)
+    ax5.legend(loc="upper left", fontsize=8.5)
 
     # --------------------------------------------------------------------------
-    # 6. Total Throughput Comparison (Bottom Right) - PLOT 6
+    # 6. Total Throughput Comparison (Bottom Right) - PLOT 6 (With Clean Arrow)
     # --------------------------------------------------------------------------
     ax6 = fig.add_subplot(gs[1, 2])
     x_c = np.arange(len(concurrencies))
@@ -295,10 +304,19 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
             h = thpt[2]
             ax6.annotate(f"{h:,.0f}", (x_c[2] + (i - 1)*w, h), xytext=(0, 4), textcoords="offset points", ha="center", fontsize=8.5, fontweight="bold", color=COLORS[tp])
 
+    # Arrow pointing to TP=2 at C=32 bar
+    tp2_thpt_c32_tot = data[prefill_key][32][2]["total_tp"]  # 5947
+    ax6.annotate("Matches TP=4 @ 2× Eff.\n(Saves 2 GPUs)",
+                 xy=(2.0, tp2_thpt_c32_tot + 200),
+                 xytext=(1.35, tp2_thpt_c32_tot + 1100),
+                 arrowprops=dict(facecolor="#2ca02c", edgecolor="#2ca02c", arrowstyle="->", lw=1.8),
+                 fontsize=8.5, fontweight="bold", color="#1b7837",
+                 bbox=dict(boxstyle="round,pad=0.25", facecolor="#e5f5e0", edgecolor="#2ca02c", alpha=0.9))
+
     ax6.set_title("F. Prefill Throughput Scaling", fontweight="bold")
     ax6.set_xticks(x_c)
     ax6.set_xticklabels([f"C={c}" for c in concurrencies])
-    ax6.set_ylim(0, 7500)
+    ax6.set_ylim(0, 7800)
     ax6.set_ylabel("Total Tokens / Second")
     ax6.legend(loc="upper left", fontsize=8.5)
 
