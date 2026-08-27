@@ -2,7 +2,7 @@
 """
 Publication-Quality Macro Benchmark Plotting Suite
 Generates all 6 macro scaling figures, including the Pareto Frontier and Master Dashboard
-with explicit TP=2 sweet-spot annotations and green arrows on Subplots E & F (zero overlap).
+with explicit TP=2 sweet-spot annotations at C=32 on Plots C & D and green arrows on Subplots E & F.
 """
 
 import glob
@@ -221,15 +221,15 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     ax2.legend(loc="upper left", fontsize=8.5)
 
     # --------------------------------------------------------------------------
-    # 3. TTFT Log Scaling (Top Right)
+    # 3. TTFT Log Scaling (Top Right) - CIRCLE AT C=32
     # --------------------------------------------------------------------------
     ax3 = fig.add_subplot(gs[0, 2])
     for tp in [1, 2, 4]:
         ttfts = [data[prefill_key][c][tp]["ttft_med"] for c in concurrencies]
         ax3.plot(concurrencies, ttfts, color=COLORS[tp], marker=MARKERS[tp], linewidth=2.0, label=f"TP = {tp}")
         
-    tp2_ttft_c1 = data[prefill_key][1][2]["ttft_med"]
-    ax3.scatter(1, tp2_ttft_c1, s=260, facecolors="none", edgecolors="#2ca02c", linewidth=2.0, zorder=10)
+    tp2_ttft_c32 = data[prefill_key][32][2]["ttft_med"]
+    ax3.scatter(32, tp2_ttft_c32, s=260, facecolors="none", edgecolors="#2ca02c", linewidth=2.0, zorder=10)
     ax3.set_yscale("log")
     ax3.set_title("C. Prefill TTFT (Log Scale)", fontweight="bold")
     ax3.set_xlabel("Concurrency (C)")
@@ -238,15 +238,15 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     ax3.legend(loc="lower right", fontsize=8.5)
 
     # --------------------------------------------------------------------------
-    # 4. ITL Decode Scaling (Bottom Left)
+    # 4. ITL Decode Scaling (Bottom Left) - CIRCLE AT C=32
     # --------------------------------------------------------------------------
     ax4 = fig.add_subplot(gs[1, 0])
     for tp in [1, 2, 4]:
         itls = [data[decode_key][c][tp]["itl_med"] for c in concurrencies]
         ax4.plot(concurrencies, itls, color=COLORS[tp], marker=MARKERS[tp], linewidth=2.0, label=f"TP = {tp}")
         
-    tp2_itl_c8 = data[decode_key][8][2]["itl_med"]
-    ax4.scatter(8, tp2_itl_c8, s=260, facecolors="none", edgecolors="#2ca02c", linewidth=2.0, zorder=10)
+    tp2_itl_c32 = data[decode_key][32][2]["itl_med"]
+    ax4.scatter(32, tp2_itl_c32, s=260, facecolors="none", edgecolors="#2ca02c", linewidth=2.0, zorder=10)
     ax4.set_title("D. Decode ITL & Interconnect Plateau", fontweight="bold")
     ax4.set_xlabel("Concurrency (C)")
     ax4.set_ylabel("Median ITL (ms)")
@@ -254,7 +254,7 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     ax4.legend(loc="upper left", fontsize=8.5)
 
     # --------------------------------------------------------------------------
-    # 5. MFU Utilization Bar (Bottom Center) - PLOT 5 (With Clean Arrow)
+    # 5. MFU Utilization Bar (Bottom Center) - PLOT 5
     # --------------------------------------------------------------------------
     ax5 = fig.add_subplot(gs[1, 1])
     p_mfu = [data[prefill_key][32][tp]["mfu"] for tp in tp_sizes]
@@ -290,7 +290,7 @@ def plot_master_dashboard(data, save_path=PLOTS_DIR / "macro_scaling_dashboard.p
     ax5.legend(loc="upper left", fontsize=8.5)
 
     # --------------------------------------------------------------------------
-    # 6. Total Throughput Comparison (Bottom Right) - PLOT 6 (With Clean Arrow)
+    # 6. Total Throughput Comparison (Bottom Right) - PLOT 6
     # --------------------------------------------------------------------------
     ax6 = fig.add_subplot(gs[1, 2])
     x_c = np.arange(len(concurrencies))
